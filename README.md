@@ -14,6 +14,9 @@ A scalable, vendor-agnostic data downloader in Python that can flexibly fetch da
 - **🆕 Intelligent Scheduling**: Time-based downloads with cron expressions and real-time polling
 - **🆕 Timezone Support**: Full timezone awareness for global financial markets
 - **🆕 Continuous Operation**: Runs continuously with automatic retry and error recovery
+- **🆕 Database Tracking**: SQLite database for comprehensive download activity logging
+- **🆕 Reporting & Monitoring**: Built-in reporting tools and monitoring dashboard
+- **🆕 Performance Analytics**: Success rates, duration tracking, and failure analysis
 
 ## Supported Data Sources
 
@@ -168,6 +171,45 @@ python main.py --scheduler --config my_config.yaml
 python main.py --scheduler --log-level DEBUG
 ```
 
+### 🆕 Database Operations & Reporting
+
+```bash
+# Check database status
+python db_cli.py status
+
+# Generate reports
+python db_cli.py report --type overview     # System overview
+python db_cli.py report --type vendors      # Vendor summary
+python db_cli.py report --type activity     # Recent activity
+python db_cli.py report --type complete     # Complete report
+
+# Export data
+python db_cli.py export --output report.csv
+
+# Monitor specific vendor
+python db_cli.py vendor-details vendor_api
+
+# Real-time monitoring
+python db_cli.py monitor
+
+# Database maintenance
+python db_cli.py cleanup --days 90         # Clean old records
+python db_cli.py reset --force             # Reset database (WARNING!)
+```
+
+### 🆕 Dashboard & Analytics
+
+```bash
+# Show live dashboard
+python -m reporting.dashboard
+
+# Generate HTML report
+python -m reporting.dashboard --html report.html
+
+# Daily summary
+python -m reporting.dashboard --days 30
+```
+
 ### Command Line Options
 
 - `--config, -c`: Path to configuration file (default: config.yaml)
@@ -296,6 +338,58 @@ python main.py --status
 # View next scheduled runs
 python main.py --status
 ```
+
+## 🆕 Database Integration
+
+The Feed Downloader now includes comprehensive database tracking for all download activities.
+
+### Database Configuration
+
+```yaml
+# Database configuration for download tracking
+database:
+  enabled: true
+  type: "sqlite"
+  path: "./feed_downloader.db"
+  
+  # Database maintenance settings
+  maintenance:
+    cleanup_days: 90  # Keep records for 90 days
+    auto_cleanup: true  # Automatically clean old records
+    
+  # Performance settings
+  performance:
+    batch_size: 100  # Batch size for bulk operations
+    connection_timeout: 30  # Connection timeout in seconds
+```
+
+### Tracked Information
+
+Every download activity is automatically tracked with:
+
+- **Download Details**: Vendor name, source type, URL/path, local file path
+- **Timing**: Start time, end time, duration
+- **Status**: Success/failure with error messages
+- **Performance**: File size, retry count, download type
+- **Metadata**: Schedule configuration, additional context
+
+### Database Schema
+
+The system creates several tables and views:
+
+- **`downloads`**: Main table with all download records
+- **`vendor_stats`**: Aggregated statistics per vendor
+- **`daily_stats`**: Daily aggregated statistics
+- **`recent_failures`**: Recent failure analysis
+
+### Reporting Features
+
+- **System Overview**: Total downloads, success rates, uptime
+- **Vendor Analytics**: Per-vendor performance metrics
+- **Activity Monitoring**: Real-time download status
+- **Failure Analysis**: Error tracking and retry patterns
+- **Data Export**: CSV export for external analysis
+- **HTML Reports**: Formatted reports for sharing
 
 ## Advanced Features
 

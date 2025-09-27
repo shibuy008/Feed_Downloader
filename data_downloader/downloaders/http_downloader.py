@@ -18,7 +18,7 @@ class HTTPDownloader(BaseDownloader):
         self.required_fields = ["url"]
         self.validate_config(self.required_fields)
     
-    def download(self) -> str:
+    def _do_download(self) -> str:
         """
         Download file from HTTP/HTTPS URL.
         
@@ -87,7 +87,7 @@ class HTTPDownloader(BaseDownloader):
         if username and password:
             self.config["auth"] = (username, password)
         
-        return self.download()
+        return self._do_download()
     
     def download_with_retry(self, max_retries: int = 3, retry_delay: int = 5) -> str:
         """
@@ -108,7 +108,7 @@ class HTTPDownloader(BaseDownloader):
                     self.logger.info(f"Retry attempt {attempt}/{max_retries}")
                     time.sleep(retry_delay)
                 
-                return self.download()
+                return self._do_download()
                 
             except Exception as e:
                 last_exception = e

@@ -18,7 +18,7 @@ class RESTAPIDownloader(BaseDownloader):
         self.required_fields = ["endpoint"]
         self.validate_config(self.required_fields)
     
-    def download(self) -> str:
+    def _do_download(self) -> str:
         """
         Download data from REST API endpoint.
         
@@ -88,7 +88,7 @@ class RESTAPIDownloader(BaseDownloader):
             # token should be base64 encoded username:password
             self.config["headers"]["Authorization"] = f"Basic {token}"
         
-        return self.download()
+        return self._do_download()
     
     def post_download(self, data: Dict[str, Any] = None) -> str:
         """

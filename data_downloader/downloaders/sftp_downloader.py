@@ -17,7 +17,7 @@ class SFTPDownloader(BaseDownloader):
         self.required_fields = ["host", "username", "password", "remote_path"]
         self.validate_config(self.required_fields)
     
-    def download(self) -> str:
+    def _do_download(self) -> str:
         """
         Download file from SFTP server.
         

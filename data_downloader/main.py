@@ -16,6 +16,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from downloader_factory import get_downloader, validate_config
 from parsers.parser_factory import parse_file, detect_file_format
 from utils.decompressor import decompress
+from database import get_db_context
 
 
 def setup_logging(log_level: str = "INFO", log_file: str = None) -> None:
@@ -168,6 +169,12 @@ def main():
         
         # Load configuration
         config = load_config(args.config)
+        
+        # Initialize database if enabled
+        if config.get("database", {}).get("enabled", True):
+            db_path = config.get("database", {}).get("path", "feed_downloader.db")
+            db_context = get_db_context(db_path)
+            logger.info(f"Database initialized: {db_path}")
         
         # Handle scheduler mode
         if args.scheduler:

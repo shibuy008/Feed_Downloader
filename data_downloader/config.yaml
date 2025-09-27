@@ -193,6 +193,22 @@ scheduling:
   # Common timezones: UTC, America/New_York, America/Chicago, 
   # America/Denver, America/Los_Angeles, Europe/London, Asia/Tokyo
 
+# Database configuration for download tracking
+database:
+  enabled: true
+  type: "sqlite"
+  path: "./feed_downloader.db"
+  
+  # Database maintenance settings
+  maintenance:
+    cleanup_days: 90  # Keep records for 90 days
+    auto_cleanup: true  # Automatically clean old records
+    
+  # Performance settings
+  performance:
+    batch_size: 100  # Batch size for bulk operations
+    connection_timeout: 30  # Connection timeout in seconds
+
 # Storage configurations (optional)
 storage:
   # Local file storage

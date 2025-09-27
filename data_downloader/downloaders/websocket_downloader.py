@@ -21,7 +21,7 @@ class WebSocketDownloader(BaseDownloader):
         self.ws = None
         self.messages = []
     
-    def download(self, duration: int = 10, max_messages: int = 100) -> str:
+    def _do_download(self, duration: int = 10, max_messages: int = 100) -> str:
         """
         Download data from WebSocket stream.
         

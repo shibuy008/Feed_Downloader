@@ -3,7 +3,10 @@ Base downloader class for all data source types.
 """
 import abc
 import logging
-from typing import Dict, Any
+import os
+from typing import Dict, Any, Optional
+
+from database import get_db_context, DownloadTracker
 
 
 class BaseDownloader(abc.ABC):
@@ -21,9 +24,10 @@ class BaseDownloader(abc.ABC):
         """
         self.config = config
         self.logger = logging.getLogger(f"downloader.{config.get('name', 'unknown')}")
+        self.db_tracker = get_db_context().get_tracker()
         
     @abc.abstractmethod
-    def download(self) -> str:
+    def _do_download(self) -> str:
         """
         Download data from the vendor source.
         
@@ -34,6 +38,62 @@ class BaseDownloader(abc.ABC):
             Exception: If download fails
         """
         pass
+    
+    def download(self, download_type: str = "on_demand") -> str:
+        """
+        Download data with database tracking.
+        
+        Args:
+            download_type: Type of download (scheduled, real_time, on_demand)
+            
+        Returns:
+            str: Path to the downloaded file
+            
+        Raises:
+            Exception: If download fails
+        """
+        vendor_name = self.config.get("name", "unknown")
+        source_type = self.config.get("type", "unknown")
+        source_url = self._get_source_url()
+        local_path = self.get_local_path()
+        schedule_config = self.config.get("schedule")
+        
+        # Track download in database
+        with self.db_tracker.track_download(
+            vendor_name=vendor_name,
+            download_type=download_type,
+            source_type=source_type,
+            source_url=source_url,
+            local_path=local_path,
+            schedule_config=schedule_config
+        ) as download_id:
+            self.logger.info(f"Starting download (ID: {download_id}) for {vendor_name}")
+            
+            # Perform the actual download
+            result = self._do_download()
+            
+            self.logger.info(f"Completed download (ID: {download_id}) for {vendor_name}")
+            return result
+    
+    def _get_source_url(self) -> str:
+        """
+        Get source URL for database tracking.
+        
+        Returns:
+            str: Source URL or path
+        """
+        source_type = self.config.get("type", "")
+        
+        if source_type == "sftp":
+            return f"sftp://{self.config.get('host', '')}:{self.config.get('port', 22)}{self.config.get('remote_path', '')}"
+        elif source_type == "rest_api":
+            return self.config.get("endpoint", "")
+        elif source_type == "websocket":
+            return self.config.get("url", "")
+        elif source_type == "http":
+            return self.config.get("url", "")
+        else:
+            return "unknown"
     
     def validate_config(self, required_fields: list) -> None:
         """

@@ -201,8 +201,9 @@ class FeedScheduler:
                 # Create downloader
                 downloader = get_downloader(vendor_config)
                 
-                # Download data
-                local_file = downloader.download()
+                # Download data with proper download type
+                download_type = "scheduled" if schedule_config.feed_type == FeedType.SCHEDULED else "real_time"
+                local_file = downloader.download(download_type=download_type)
                 
                 # Handle compressed files
                 files_to_process = [local_file]
