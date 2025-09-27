@@ -1,0 +1,259 @@
+# Feed Downloader - Scheduling Examples Configuration
+# This file demonstrates different scheduling scenarios for financial data feeds
+
+# Global settings
+global:
+  download_dir: "./downloads"
+  timeout: 30
+  max_retries: 3
+  retry_delay: 5
+  log_level: "INFO"
+  log_file: "./logs/feed_downloader.log"
+
+# Vendor configurations with different scheduling patterns
+vendors:
+  # 1. Daily end-of-day data (scheduled)
+  - name: "daily_eod_data"
+    type: "sftp"
+    host: "data.vendor.com"
+    username: "user"
+    password: "pass"
+    remote_path: "/eod/daily_prices.csv"
+    local_path: "./downloads/daily_eod.csv"
+    format: "csv"
+    schedule:
+      type: "scheduled"
+      cron: "0 18 * * *"  # 6 PM daily
+      timezone: "UTC"
+      enabled: true
+      max_retries: 3
+      retry_delay: 300
+
+  # 2. Market hours data (scheduled - every hour during trading)
+  - name: "market_hours_data"
+    type: "rest_api"
+    endpoint: "https://api.marketdata.com/prices"
+    headers:
+      Authorization: "Bearer your_token"
+    params:
+      symbol: "AAPL"
+      interval: "1h"
+    local_path: "./downloads/market_hours.json"
+    format: "json"
+    schedule:
+      type: "scheduled"
+      cron: "0 9-16 * * 1-5"  # Every hour 9 AM - 4 PM, weekdays only
+      timezone: "America/New_York"
+      enabled: true
+      max_retries: 3
+      retry_delay: 300
+
+  # 3. Real-time price feeds (continuous polling)
+  - name: "realtime_prices"
+    type: "rest_api"
+    endpoint: "https://api.crypto.com/prices"
+    headers:
+      User-Agent: "Feed-Downloader/1.0"
+    params:
+      symbols: "BTC,ETH,ADA"
+    local_path: "./downloads/realtime_prices.json"
+    format: "json"
+    schedule:
+      type: "real_time"
+      interval_seconds: 30  # Every 30 seconds
+      timezone: "UTC"
+      enabled: true
+      max_retries: 5
+      retry_delay: 10
+
+  # 4. Weekly reports (scheduled)
+  - name: "weekly_reports"
+    type: "http"
+    url: "https://reports.financial.com/weekly_summary.xlsx"
+    headers:
+      Authorization: "Bearer your_token"
+    local_path: "./downloads/weekly_reports.xlsx"
+    format: "excel"
+    schedule:
+      type: "scheduled"
+      cron: "0 9 * * 1"  # 9 AM every Monday
+      timezone: "America/New_York"
+      enabled: true
+      max_retries: 3
+      retry_delay: 600
+
+  # 5. Pre-market data (scheduled)
+  - name: "premarket_data"
+    type: "sftp"
+    host: "premarket.vendor.com"
+    username: "user"
+    password: "pass"
+    remote_path: "/premarket/indicators.csv"
+    local_path: "./downloads/premarket.csv"
+    format: "csv"
+    schedule:
+      type: "scheduled"
+      cron: "0 6 * * 1-5"  # 6 AM weekdays
+      timezone: "America/New_York"
+      enabled: true
+      max_retries: 3
+      retry_delay: 300
+
+  # 6. After-hours data (scheduled)
+  - name: "afterhours_data"
+    type: "rest_api"
+    endpoint: "https://api.afterhours.com/data"
+    headers:
+      Authorization: "Bearer your_token"
+    params:
+      session: "after_hours"
+    local_path: "./downloads/afterhours.json"
+    format: "json"
+    schedule:
+      type: "scheduled"
+      cron: "0 20 * * 1-5"  # 8 PM weekdays
+      timezone: "America/New_York"
+      enabled: true
+      max_retries: 3
+      retry_delay: 300
+
+  # 7. High-frequency tick data (real-time with short intervals)
+  - name: "tick_data"
+    type: "websocket"
+    url: "wss://stream.marketdata.com/tick"
+    subscription_message: '{"subscribe": "tick_data", "symbols": ["AAPL", "GOOGL"]}'
+    local_path: "./downloads/tick_data.json"
+    format: "json"
+    duration: 60  # Collect for 1 minute
+    max_messages: 1000
+    schedule:
+      type: "real_time"
+      interval_seconds: 60  # Every minute
+      timezone: "UTC"
+      enabled: true
+      max_retries: 10
+      retry_delay: 5
+
+  # 8. Monthly data (scheduled)
+  - name: "monthly_data"
+    type: "sftp"
+    host: "monthly.vendor.com"
+    username: "user"
+    password: "pass"
+    remote_path: "/monthly/performance.zip"
+    local_path: "./downloads/monthly_performance.zip"
+    format: "csv"
+    compressed: true
+    compression_type: "zip"
+    schedule:
+      type: "scheduled"
+      cron: "0 9 1 * *"  # 9 AM first day of month
+      timezone: "UTC"
+      enabled: true
+      max_retries: 3
+      retry_delay: 600
+
+  # 9. News feeds (real-time)
+  - name: "news_feeds"
+    type: "http"
+    url: "https://feeds.finance.yahoo.com/rss/2.0/headline"
+    local_path: "./downloads/news_feeds.xml"
+    format: "xml"
+    schedule:
+      type: "real_time"
+      interval_seconds: 300  # Every 5 minutes
+      timezone: "UTC"
+      enabled: true
+      max_retries: 3
+      retry_delay: 60
+
+  # 10. End-of-day summary (scheduled)
+  - name: "eod_summary"
+    type: "rest_api"
+    endpoint: "https://api.summary.com/eod"
+    headers:
+      Authorization: "Bearer your_token"
+    params:
+      date: "today"
+      format: "json"
+    local_path: "./downloads/eod_summary.json"
+    format: "json"
+    schedule:
+      type: "scheduled"
+      cron: "0 23 * * *"  # 11 PM daily
+      timezone: "UTC"
+      enabled: true
+      max_retries: 3
+      retry_delay: 300
+
+# Scheduling configurations
+scheduling:
+  # Common cron expressions for financial data
+  common_schedules:
+    # Market schedules
+    market_open: "0 9 * * 1-5"        # 9 AM weekdays
+    market_close: "0 16 * * 1-5"      # 4 PM weekdays
+    pre_market: "0 6 * * 1-5"         # 6 AM weekdays
+    after_hours: "0 20 * * 1-5"       # 8 PM weekdays
+    
+    # Daily schedules
+    daily_morning: "0 8 * * *"        # 8 AM daily
+    daily_evening: "0 18 * * *"       # 6 PM daily
+    end_of_day: "0 23 * * *"          # 11 PM daily
+    
+    # Frequency schedules
+    every_minute: "* * * * *"         # Every minute
+    every_5_minutes: "*/5 * * * *"    # Every 5 minutes
+    every_15_minutes: "*/15 * * * *"  # Every 15 minutes
+    every_30_minutes: "*/30 * * * *"  # Every 30 minutes
+    hourly: "0 * * * *"               # Every hour
+    
+    # Weekly schedules
+    weekly_monday: "0 9 * * 1"        # 9 AM Mondays
+    weekly_friday: "0 17 * * 5"       # 5 PM Fridays
+    
+    # Monthly schedules
+    monthly_first: "0 9 1 * *"        # 9 AM first day of month
+    monthly_last: "0 17 -1 * *"       # 5 PM last day of month
+    
+    # Market hours (every hour during trading)
+    market_hours_hourly: "0 9-16 * * 1-5"  # Every hour 9 AM - 4 PM, weekdays
+    
+    # Extended hours
+    extended_hours: "0 4-20 * * 1-5"  # 4 AM - 8 PM weekdays
+
+# Parsing configurations
+parsing:
+  csv:
+    delimiter: ","
+    encoding: "utf-8"
+    parse_dates: true
+    infer_datetime_format: true
+    
+  json:
+    encoding: "utf-8"
+    normalize_nested: true
+    
+  xml:
+    encoding: "utf-8"
+    namespaces: {}
+    
+  excel:
+    engine: "openpyxl"
+    na_values: ["", "N/A", "n/a", "NULL", "null", "NaN", "nan"]
+
+# Storage configurations
+storage:
+  local:
+    enabled: true
+    base_path: "./downloads"
+    
+  # Optional: Database storage
+  database:
+    enabled: false
+    type: "postgresql"
+    host: "localhost"
+    port: 5432
+    database: "feed_data"
+    username: "user"
+    password: "password"

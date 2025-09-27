@@ -11,6 +11,9 @@ A scalable, vendor-agnostic data downloader in Python that can flexibly fetch da
 - **Logging & monitoring**: Centralized logging with vendor-specific tags
 - **Compression support**: Handles ZIP, GZIP, and TAR compressed files
 - **Multiple data sources**: SFTP, REST APIs, WebSockets, HTTP file downloads
+- **🆕 Intelligent Scheduling**: Time-based downloads with cron expressions and real-time polling
+- **🆕 Timezone Support**: Full timezone awareness for global financial markets
+- **🆕 Continuous Operation**: Runs continuously with automatic retry and error recovery
 
 ## Supported Data Sources
 
@@ -130,7 +133,7 @@ vendors:
 ### Basic Usage
 
 ```bash
-# Run with default config.yaml
+# Run with default config.yaml (one-time execution)
 python main.py
 
 # Use custom configuration file
@@ -147,6 +150,22 @@ python main.py --log-level DEBUG
 
 # Save logs to file
 python main.py --log-file ./logs/downloader.log
+```
+
+### 🆕 Scheduler Mode (Continuous Operation)
+
+```bash
+# Run in continuous scheduler mode
+python main.py --scheduler
+
+# Check scheduler status
+python main.py --status
+
+# Run scheduler with custom config
+python main.py --scheduler --config my_config.yaml
+
+# Run scheduler with debug logging
+python main.py --scheduler --log-level DEBUG
 ```
 
 ### Command Line Options
@@ -180,6 +199,102 @@ data_downloader/
 │    └── decompressor.py     # File decompression utility
 │── downloads/                # Downloaded files directory
 │── logs/                     # Log files directory
+```
+
+## 🆕 Scheduling System
+
+The Feed Downloader now includes a powerful scheduling system that handles both time-based and real-time data feeds.
+
+### Schedule Types
+
+1. **Scheduled Feeds**: Download at specific times using cron expressions
+2. **Real-time Feeds**: Download continuously with specified intervals
+3. **On-demand Feeds**: Download only when manually triggered
+
+### Configuration Examples
+
+```yaml
+vendors:
+  # Scheduled feed - daily at 8 AM
+  - name: "daily_data"
+    type: "sftp"
+    # ... connection details ...
+    schedule:
+      type: "scheduled"
+      cron: "0 8 * * *"  # Daily at 8 AM
+      timezone: "UTC"
+      enabled: true
+      max_retries: 3
+      retry_delay: 300
+
+  # Real-time feed - every 5 minutes
+  - name: "realtime_prices"
+    type: "rest_api"
+    # ... connection details ...
+    schedule:
+      type: "real_time"
+      interval_seconds: 300  # Every 5 minutes
+      timezone: "UTC"
+      enabled: true
+      max_retries: 5
+      retry_delay: 60
+
+  # Market hours only - every hour during trading
+  - name: "market_data"
+    type: "rest_api"
+    # ... connection details ...
+    schedule:
+      type: "scheduled"
+      cron: "0 9-16 * * 1-5"  # 9 AM - 4 PM, weekdays only
+      timezone: "America/New_York"
+      enabled: true
+      max_retries: 3
+      retry_delay: 300
+```
+
+### Common Cron Expressions
+
+```yaml
+scheduling:
+  common_schedules:
+    market_open: "0 9 * * 1-5"        # 9 AM weekdays
+    market_close: "0 16 * * 1-5"      # 4 PM weekdays
+    daily_morning: "0 8 * * *"        # 8 AM daily
+    daily_evening: "0 18 * * *"       # 6 PM daily
+    hourly: "0 * * * *"               # Every hour
+    every_15_minutes: "*/15 * * * *"  # Every 15 minutes
+    every_5_minutes: "*/5 * * * *"    # Every 5 minutes
+    weekly_monday: "0 9 * * 1"        # 9 AM Mondays
+    monthly_first: "0 9 1 * *"        # 9 AM first day of month
+    end_of_day: "0 23 * * *"          # 11 PM daily
+    pre_market: "0 6 * * 1-5"         # 6 AM weekdays
+    after_hours: "0 20 * * 1-5"       # 8 PM weekdays
+```
+
+### Timezone Support
+
+The scheduler supports all standard timezones:
+
+- `UTC` - Coordinated Universal Time
+- `America/New_York` - Eastern Time (US)
+- `America/Chicago` - Central Time (US)
+- `America/Denver` - Mountain Time (US)
+- `America/Los_Angeles` - Pacific Time (US)
+- `Europe/London` - Greenwich Mean Time
+- `Asia/Tokyo` - Japan Standard Time
+- And many more...
+
+### Running the Scheduler
+
+```bash
+# Start continuous scheduler
+python main.py --scheduler
+
+# Check status
+python main.py --status
+
+# View next scheduled runs
+python main.py --status
 ```
 
 ## Advanced Features

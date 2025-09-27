@@ -26,6 +26,10 @@ xlrd>=2.0.0
 # Optional: Enhanced HTTP client
 httpx>=0.24.0
 
+# Scheduling dependencies
+pytz>=2023.3
+croniter>=1.4.0
+
 # Optional: Database support
 # psycopg2-binary>=2.9.0  # PostgreSQL
 # pymongo>=4.0.0          # MongoDB

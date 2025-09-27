@@ -153,6 +153,8 @@ def main():
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"], help="Logging level")
     parser.add_argument("--log-file", help="Log file path")
     parser.add_argument("--dry-run", action="store_true", help="Validate configuration without downloading")
+    parser.add_argument("--scheduler", action="store_true", help="Run in scheduler mode (continuous)")
+    parser.add_argument("--status", action="store_true", help="Show scheduler status and exit")
     
     args = parser.parse_args()
     
@@ -166,6 +168,37 @@ def main():
         
         # Load configuration
         config = load_config(args.config)
+        
+        # Handle scheduler mode
+        if args.scheduler:
+            from scheduler_runner import SchedulerRunner
+            runner = SchedulerRunner(args.config)
+            runner.setup_logging(args.log_level, args.log_file)
+            runner.start()
+            return 0
+        
+        # Handle status check
+        if args.status:
+            from scheduler import FeedScheduler
+            scheduler = FeedScheduler(config)
+            status = scheduler.get_status()
+            
+            print("Feed Downloader Scheduler Status:")
+            print("=" * 40)
+            print(f"Running: {status['running']}")
+            print(f"Active Threads: {status['active_threads']}")
+            print(f"Vendors: {', '.join(status['vendors'])}")
+            
+            next_runs = status['next_runs']
+            if next_runs:
+                print("\nNext Scheduled Runs:")
+                for vendor, next_run in next_runs.items():
+                    if next_run:
+                        print(f"  {vendor}: {next_run}")
+                    else:
+                        print(f"  {vendor}: Real-time/On-demand")
+            
+            return 0
         
         # Get vendors to process
         vendors = config.get("vendors", [])

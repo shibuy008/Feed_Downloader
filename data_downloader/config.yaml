@@ -19,7 +19,7 @@ global:
 
 # Vendor configurations
 vendors:
-  # Example 1: SFTP vendor for CSV data
+  # Example 1: SFTP vendor for CSV data (scheduled)
   - name: "vendor_sftp"
     type: "sftp"
     host: "sftp.example.com"
@@ -30,8 +30,15 @@ vendors:
     local_path: "./downloads/vendor_sftp.csv"
     format: "csv"
     compressed: false
+    schedule:
+      type: "scheduled"
+      cron: "0 8 * * *"  # Daily at 8 AM
+      timezone: "UTC"
+      enabled: true
+      max_retries: 3
+      retry_delay: 300
     
-  # Example 2: REST API vendor for JSON data
+  # Example 2: REST API vendor for JSON data (real-time)
   - name: "vendor_api"
     type: "rest_api"
     endpoint: "https://api.coindesk.com/v1/bpi/currentprice.json"
@@ -41,8 +48,15 @@ vendors:
     local_path: "./downloads/vendor_api.json"
     format: "json"
     timeout: 30
+    schedule:
+      type: "real_time"
+      interval_seconds: 300  # Every 5 minutes
+      timezone: "UTC"
+      enabled: true
+      max_retries: 3
+      retry_delay: 60
     
-  # Example 3: WebSocket vendor for real-time data
+  # Example 3: WebSocket vendor for real-time data (continuous)
   - name: "vendor_ws"
     type: "websocket"
     url: "wss://ws.postman-echo.com/raw"
@@ -51,6 +65,13 @@ vendors:
     format: "json"
     duration: 10  # seconds to collect data
     max_messages: 100
+    schedule:
+      type: "real_time"
+      interval_seconds: 60  # Every minute
+      timezone: "UTC"
+      enabled: true
+      max_retries: 5
+      retry_delay: 30
     
   # Example 4: HTTP file download
   - name: "vendor_http"
@@ -91,7 +112,7 @@ vendors:
     local_path: "./downloads/vendor_news.xml"
     format: "xml"
     
-  # Example 8: Financial data with authentication
+  # Example 8: Financial data with authentication (market hours only)
   - name: "vendor_auth"
     type: "rest_api"
     endpoint: "https://api.financial-data.com/prices"
@@ -104,6 +125,13 @@ vendors:
       limit: 1000
     local_path: "./downloads/vendor_auth.json"
     format: "json"
+    schedule:
+      type: "scheduled"
+      cron: "0 9-16 * * 1-5"  # Every hour during market hours (9 AM - 4 PM, weekdays)
+      timezone: "America/New_York"
+      enabled: true
+      max_retries: 3
+      retry_delay: 300
     
   # Example 9: Real-time market data via WebSocket
   - name: "vendor_market"
@@ -138,6 +166,32 @@ parsing:
   excel:
     engine: "openpyxl"
     na_values: ["", "N/A", "n/a", "NULL", "null", "NaN", "nan"]
+
+# Scheduling configurations
+scheduling:
+  # Common cron expressions for financial data
+  common_schedules:
+    market_open: "0 9 * * 1-5"        # 9 AM weekdays
+    market_close: "0 16 * * 1-5"      # 4 PM weekdays
+    daily_morning: "0 8 * * *"        # 8 AM daily
+    daily_evening: "0 18 * * *"       # 6 PM daily
+    hourly: "0 * * * *"               # Every hour
+    every_15_minutes: "*/15 * * * *"  # Every 15 minutes
+    every_5_minutes: "*/5 * * * *"    # Every 5 minutes
+    weekly_monday: "0 9 * * 1"        # 9 AM Mondays
+    monthly_first: "0 9 1 * *"        # 9 AM first day of month
+    end_of_day: "0 23 * * *"          # 11 PM daily
+    pre_market: "0 6 * * 1-5"         # 6 AM weekdays
+    after_hours: "0 20 * * 1-5"       # 8 PM weekdays
+  
+  # Schedule types explanation:
+  # - scheduled: Download at specific times using cron expressions
+  # - real_time: Download continuously with specified intervals
+  # - on_demand: Download only when manually triggered
+  
+  # Timezone support:
+  # Common timezones: UTC, America/New_York, America/Chicago, 
+  # America/Denver, America/Los_Angeles, Europe/London, Asia/Tokyo
 
 # Storage configurations (optional)
 storage:
