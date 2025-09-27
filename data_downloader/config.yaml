@@ -1,0 +1,166 @@
+# Feed Downloader Configuration
+# This file defines all vendor sources and their connection details
+
+# Global settings
+global:
+  # Default download directory
+  download_dir: "./downloads"
+  
+  # Default timeout for connections (seconds)
+  timeout: 30
+  
+  # Retry settings
+  max_retries: 3
+  retry_delay: 5
+  
+  # Logging settings
+  log_level: "INFO"
+  log_file: "./logs/feed_downloader.log"
+
+# Vendor configurations
+vendors:
+  # Example 1: SFTP vendor for CSV data
+  - name: "vendor_sftp"
+    type: "sftp"
+    host: "sftp.example.com"
+    port: 22
+    username: "your_username"
+    password: "your_password"
+    remote_path: "/data/daily_prices.csv"
+    local_path: "./downloads/vendor_sftp.csv"
+    format: "csv"
+    compressed: false
+    
+  # Example 2: REST API vendor for JSON data
+  - name: "vendor_api"
+    type: "rest_api"
+    endpoint: "https://api.coindesk.com/v1/bpi/currentprice.json"
+    headers:
+      User-Agent: "Feed-Downloader/1.0"
+    params: {}
+    local_path: "./downloads/vendor_api.json"
+    format: "json"
+    timeout: 30
+    
+  # Example 3: WebSocket vendor for real-time data
+  - name: "vendor_ws"
+    type: "websocket"
+    url: "wss://ws.postman-echo.com/raw"
+    subscription_message: "Hello WebSocket"
+    local_path: "./downloads/vendor_ws.json"
+    format: "json"
+    duration: 10  # seconds to collect data
+    max_messages: 100
+    
+  # Example 4: HTTP file download
+  - name: "vendor_http"
+    type: "http"
+    url: "https://example.com/data.csv"
+    headers:
+      User-Agent: "Feed-Downloader/1.0"
+    local_path: "./downloads/vendor_http.csv"
+    format: "csv"
+    chunk_size: 8192
+    
+  # Example 5: Compressed ZIP file from SFTP
+  - name: "vendor_zip"
+    type: "sftp"
+    host: "sftp.example.com"
+    port: 22
+    username: "your_username"
+    password: "your_password"
+    remote_path: "/data/archive.zip"
+    local_path: "./downloads/vendor_archive.zip"
+    format: "csv"
+    compressed: true
+    compression_type: "zip"
+    
+  # Example 6: Excel file from REST API
+  - name: "vendor_excel"
+    type: "rest_api"
+    endpoint: "https://example.com/report.xlsx"
+    headers:
+      Authorization: "Bearer your_token"
+    local_path: "./downloads/vendor_report.xlsx"
+    format: "excel"
+    
+  # Example 7: XML feed (RSS/Atom)
+  - name: "vendor_xml"
+    type: "http"
+    url: "https://feeds.finance.yahoo.com/rss/2.0/headline"
+    local_path: "./downloads/vendor_news.xml"
+    format: "xml"
+    
+  # Example 8: Financial data with authentication
+  - name: "vendor_auth"
+    type: "rest_api"
+    endpoint: "https://api.financial-data.com/prices"
+    headers:
+      Authorization: "Bearer your_api_token"
+      Content-Type: "application/json"
+    params:
+      symbol: "AAPL"
+      interval: "1h"
+      limit: 1000
+    local_path: "./downloads/vendor_auth.json"
+    format: "json"
+    
+  # Example 9: Real-time market data via WebSocket
+  - name: "vendor_market"
+    type: "websocket"
+    url: "wss://stream.binance.com:9443/ws/btcusdt@ticker"
+    subscription_message: null  # No subscription needed for this endpoint
+    local_path: "./downloads/vendor_market.json"
+    format: "json"
+    duration: 30
+    max_messages: 1000
+
+# Parsing configurations (optional)
+parsing:
+  # CSV parsing options
+  csv:
+    delimiter: ","
+    encoding: "utf-8"
+    parse_dates: true
+    infer_datetime_format: true
+    
+  # JSON parsing options
+  json:
+    encoding: "utf-8"
+    normalize_nested: true
+    
+  # XML parsing options
+  xml:
+    encoding: "utf-8"
+    namespaces: {}
+    
+  # Excel parsing options
+  excel:
+    engine: "openpyxl"
+    na_values: ["", "N/A", "n/a", "NULL", "null", "NaN", "nan"]
+
+# Storage configurations (optional)
+storage:
+  # Local file storage
+  local:
+    enabled: true
+    base_path: "./downloads"
+    
+  # Database storage (example)
+  database:
+    enabled: false
+    type: "postgresql"
+    host: "localhost"
+    port: 5432
+    database: "feed_data"
+    username: "user"
+    password: "password"
+    
+  # Cloud storage (example)
+  cloud:
+    enabled: false
+    type: "s3"
+    bucket: "feed-downloader-data"
+    region: "us-east-1"
+    access_key: "your_access_key"
+    secret_key: "your_secret_key"

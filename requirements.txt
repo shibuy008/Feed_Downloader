@@ -1,0 +1,46 @@
+# Feed Downloader Requirements
+# Core dependencies for the scalable data downloader
+
+# Data processing
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Network and file operations
+requests>=2.28.0
+paramiko>=2.11.0
+websocket-client>=1.4.0
+
+# Configuration and data formats
+PyYAML>=6.0
+xmltodict>=0.13.0
+
+# Excel support
+openpyxl>=3.0.0
+xlrd>=2.0.0
+
+# Compression support (built-in modules used, but listed for reference)
+# zipfile - built-in
+# gzip - built-in
+# tarfile - built-in
+
+# Optional: Enhanced HTTP client
+httpx>=0.24.0
+
+# Optional: Database support
+# psycopg2-binary>=2.9.0  # PostgreSQL
+# pymongo>=4.0.0          # MongoDB
+# sqlalchemy>=1.4.0       # Generic SQL
+
+# Optional: Cloud storage
+# boto3>=1.26.0           # AWS S3
+# google-cloud-storage>=2.7.0  # Google Cloud Storage
+# azure-storage-blob>=12.14.0  # Azure Blob Storage
+
+# Optional: Scheduling
+# APScheduler>=3.9.0
+
+# Development and testing (optional)
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# black>=22.0.0
+# flake8>=5.0.0
