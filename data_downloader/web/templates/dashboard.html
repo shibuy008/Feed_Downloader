@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed Downloader Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .metric-card.danger {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+        
+        .metric-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .metric-card.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+        
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .loading {
+            display: none;
+        }
+        
+        .error-message {
+            display: none;
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center py-3">
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-download text-primary"></i>
+                        Feed Downloader Dashboard
+                    </h1>
+                    <div>
+                        <span class="badge bg-secondary" id="last-updated">Loading...</span>
+                        <button class="btn btn-outline-primary btn-sm ms-2" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="error-message"></div>
+
+        <!-- System Overview -->
+        <div class="row" id="system-overview">
+            <div class="col-md-3">
+                <div class="metric-card info">
+                    <div class="metric-value" id="total-downloads">-</div>
+                    <div class="metric-label">Total Downloads</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card success">
+                    <div class="metric-value" id="success-rate">-</div>
+                    <div class="metric-label">Success Rate</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card warning">
+                    <div class="metric-value" id="active-vendors">-</div>
+                    <div class="metric-label">Active Vendors</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="uptime">-</div>
+                    <div class="metric-label">Uptime</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="table-container">
+                    <h5><i class="fas fa-chart-line text-primary"></i> Daily Statistics</h5>
+                    <canvas id="dailyChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="table-container">
+                    <h5><i class="fas fa-chart-pie text-primary"></i> Success vs Failed</h5>
+                    <canvas id="statusChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Tables -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="table-container">
+                    <h5><i class="fas fa-users text-primary"></i> Vendor Performance</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Vendor</th>
+                                    <th>Total</th>
+                                    <th>Success</th>
+                                    <th>Rate</th>
+                                    <th>Last Download</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vendor-stats">
+                                <tr>
+                                    <td colspan="5" class="text-center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="table-container">
+                    <h5><i class="fas fa-clock text-primary"></i> Recent Activity</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Vendor</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                    <th>Duration</th>
+                                    <th>Size</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-activity">
+                                <tr>
+                                    <td colspan="5" class="text-center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Failures -->
+        <div class="row">
+            <div class="col-12">
+                <div class="table-container">
+                    <h5><i class="fas fa-exclamation-triangle text-danger"></i> Recent Failures</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Vendor</th>
+                                    <th>Source Type</th>
+                                    <th>Error Message</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-failures">
+                                <tr>
+                                    <td colspan="4" class="text-center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Refresh Button -->
+    <button class="btn btn-primary refresh-btn rounded-circle" onclick="refreshData()" title="Refresh Data">
+        <i class="fas fa-sync-alt"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let dailyChart, statusChart;
+
+        // Initialize charts
+        function initCharts() {
+            // Daily Chart
+            const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+            dailyChart = new Chart(dailyCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Total Downloads',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }, {
+                        label: 'Successful',
+                        data: [],
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Status Chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            statusChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Successful', 'Failed'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#28a745', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Show loading
+        function showLoading() {
+            document.querySelector('.loading').style.display = 'flex';
+        }
+
+        // Hide loading
+        function hideLoading() {
+            document.querySelector('.loading').style.display = 'none';
+        }
+
+        // Show error
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Update system overview
+        function updateOverview(data) {
+            document.getElementById('total-downloads').textContent = data.total_downloads;
+            document.getElementById('success-rate').textContent = data.success_rate;
+            document.getElementById('active-vendors').textContent = data.active_vendors;
+            document.getElementById('uptime').textContent = data.uptime_hours;
+        }
+
+        // Update vendor stats
+        function updateVendorStats(data) {
+            const tbody = document.getElementById('vendor-stats');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No vendor data available</td></tr>';
+                return;
+            }
+
+            data.forEach(vendor => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${vendor.vendor_name}</strong></td>
+                    <td>${vendor.total_downloads}</td>
+                    <td>${vendor.successful}</td>
+                    <td><span class="badge ${vendor.success_rate === '100.0%' ? 'bg-success' : 'bg-warning'}">${vendor.success_rate}</span></td>
+                    <td><small>${vendor.last_download}</small></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update recent activity
+        function updateRecentActivity(data) {
+            const tbody = document.getElementById('recent-activity');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No recent activity</td></tr>';
+                return;
+            }
+
+            data.forEach(record => {
+                const statusClass = record.status === 'completed' ? 'status-success' : 
+                                  record.status === 'failed' ? 'status-failed' : 'status-pending';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.vendor}</td>
+                    <td><span class="status-badge ${statusClass}">${record.status}</span></td>
+                    <td><small>${record.start_time}</small></td>
+                    <td>${record.duration}</td>
+                    <td>${record.file_size}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update daily chart
+        function updateDailyChart(data) {
+            const labels = data.map(d => d.date);
+            const totals = data.map(d => d.total_downloads);
+            const successful = data.map(d => d.successful);
+
+            dailyChart.data.labels = labels;
+            dailyChart.data.datasets[0].data = totals;
+            dailyChart.data.datasets[1].data = successful;
+            dailyChart.update();
+        }
+
+        // Update status chart
+        function updateStatusChart(successful, failed) {
+            statusChart.data.datasets[0].data = [successful, failed];
+            statusChart.update();
+        }
+
+        // Update recent failures
+        function updateRecentFailures(data) {
+            const tbody = document.getElementById('recent-failures');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center">No recent failures</td></tr>';
+                return;
+            }
+
+            data.forEach(failure => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${failure.vendor}</td>
+                    <td>${failure.source_type}</td>
+                    <td><small>${failure.error}</small></td>
+                    <td><small>${failure.time}</small></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Fetch all data
+        async function fetchAllData() {
+            try {
+                showLoading();
+                
+                const [overview, vendors, activity, daily, failures] = await Promise.all([
+                    fetch('/api/overview').then(r => r.json()),
+                    fetch('/api/vendors').then(r => r.json()),
+                    fetch('/api/activity?limit=10').then(r => r.json()),
+                    fetch('/api/daily?days=7').then(r => r.json()),
+                    fetch('/api/failures?limit=5').then(r => r.json())
+                ]);
+
+                updateOverview(overview);
+                updateVendorStats(vendors);
+                updateRecentActivity(activity);
+                updateDailyChart(daily);
+                updateStatusChart(overview.successful_downloads, overview.failed_downloads);
+                updateRecentFailures(failures.failures);
+
+                document.getElementById('last-updated').textContent = 
+                    `Last updated: ${new Date().toLocaleTimeString()}`;
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showError('Failed to fetch dashboard data: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Refresh data
+        async function refreshData() {
+            try {
+                await fetch('/api/refresh', { method: 'POST' });
+                await fetchAllData();
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showError('Failed to refresh data: ' + error.message);
+            }
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            fetchAllData();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(fetchAllData, 30000);
+        });
+    </script>
+</body>
+</html>
